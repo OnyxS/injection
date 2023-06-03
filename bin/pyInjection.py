@@ -187,8 +187,10 @@ def main():
             print('Total errors: %d' % len(errors), file=sys.stderr)
         return 1
     else:
-        for query in fixed_queries:
-            print(ast.dump(query))
+        with open("fixed_queries.txt", "w") as f:
+            for query in fixed_queries:
+                f.write(ast.dump(query))
+                f.write('\n')
         return 0
 
 
