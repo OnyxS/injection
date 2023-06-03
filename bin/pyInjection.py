@@ -62,6 +62,7 @@ class Checker(ast.NodeVisitor):
     def __init__(self, filename, *args, **kwargs):
         self.filename = filename
         self.errors = []
+        self.fixed_queries = []
         super(Checker, self).__init__(*args, **kwargs)
 
     def check_execute(self, node):
@@ -87,11 +88,28 @@ class Checker(ast.NodeVisitor):
                 node_error = self.check_execute(node.args[0])
                 if node_error:
                     self.errors.append(node_error)
+                    self.fixed_queries.append(self.fix_query(node.args[0]))
             except IndexError:
                 pass
         elif function_name.lower() == 'eval':
             self.errors.append(IllegalLine('eval() is generally dangerous', node, self.filename))
         self.generic_visit(node)
+
+    def fix_query(self, node):
+        if isinstance(node, ast.BinOp):
+            if isinstance(node.op, ast.Mod):
+                return ast.Str(s='{}')
+            elif isinstance(node.op, ast.Add):
+                return ast.Str(s='')
+        elif isinstance(node, ast.Call):
+            if isinstance(node.func, ast.Attribute):
+                if node.func.attr == 'format':
+                    return ast.Str(s='{}')
+        elif isinstance(node, ast.Name):
+            assignment = find_assignment_in_context(node.id, node)
+            if assignment is not None:
+                return self.fix_query(assignment.value)
+        return node
 
     def visit(self, node):
         method = 'visit_' + node.__class__.__name__
@@ -122,7 +140,7 @@ def check(filename, args):
         c.visit(parsed)
     except Exception:
         raise
-    return c.errors
+    return c.errors, c.fixed_queries
 
 
 def create_parser():
@@ -154,8 +172,11 @@ def main():
         args.files = ['-']
 
     errors = []
+    fixed_queries = []
     for fname in args.files:
-        errors.extend(check(fname, args))
+        file_errors, file_fixed_queries = check(fname, args)
+        errors.extend(file_errors)
+        fixed_queries.extend(file_fixed_queries)
     if errors:
         if args.json:
             print(json.dumps(map(lambda x: x.toDict(), errors),
@@ -166,6 +187,8 @@ def main():
             print('Total errors: %d' % len(errors), file=sys.stderr)
         return 1
     else:
+        for query in fixed_queries:
+            print(ast.dump(query))
         return 0
 
 
