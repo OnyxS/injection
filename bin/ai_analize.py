@@ -31,8 +31,4 @@ def parse_and_analyze_file(filename):
 
     print(f"Анализ файла {filename} завершен. Результаты сохранены в output.txt.")
 
-# Ввод имени файла через промпт
-filename = input("Введите имя файла (.py): ")
 
-# Вызов функции для анализа и записи результатов
-parse_and_analyze_file(filename)
