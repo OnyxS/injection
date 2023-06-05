@@ -29,3 +29,4 @@ optional arguments:
 Exit status is 0 if all files are okay, 1 if any files have an error. Found
 vulnerabilities are printed to standard out
 ```
+
