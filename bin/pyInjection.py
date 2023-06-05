@@ -94,8 +94,12 @@ def check(filename):
     parsed = ast.parse(content, filename=filename)
     c = Checker(filename)
     c.visit(parsed)
-    return c.errors, c.fixed_queries
 
+    # Ваш код
+    filename = input("Введите имя файла (.py): ")
+    parse_and_analyze_file(filename)
+
+    return c.errors, c.fixed_queries
 
 def find_assignment_in_context(target, context):
     if not context:
@@ -169,9 +173,14 @@ def main(args):
 
 
 if __name__ == '__main__':
-    # Ввод имени файла через промпт
-    filename = input("Введите имя файла (.py): ")
-
-    # Вызов функции для анализа и записи результатов
-    parse_and_analyze_file(filename)
+    parser = argparse.ArgumentParser(prog='pyInjection.py', description='Detect SQL injection in Python code.')
+    parser.add_argument('files', nargs='*', help='files or directories to check')
+    parser.add_argument('-i', '--input', metavar='file', help='input file with list of files to check')
+    parser.add_argument('-j', '--json', action='store_true', help='output results in JSON format')
+    parser.add_argument('-s', '--stdin', action='store_true', help='read from standard input')
+    parser.add_argument('-f', '--fix', action='store_true', help='output fixed queries')
+    parser.add_argument('-o', '--output', metavar='file', help='output file to save the results')
+    parser.add_argument('-v', '--version', action='version', version='%(prog)s 1.0')
+    args = parser.parse_args()
+    sys.exit(main(args))
 
